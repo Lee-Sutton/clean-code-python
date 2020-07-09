@@ -3,18 +3,43 @@
 [![Build Status](https://travis-ci.com/zedr/clean-code-python.svg?branch=master)](https://travis-ci.com/zedr/clean-code-python)
 [![](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/download/releases/3.8.3/)
 
-## Table of Contents
-  1. [Introduction](#introduction)
-  2. [Variables](#variables)
-  3. [Functions](#functions)
-  4. [Objects and Data Structures](#objects-and-data-structures)
-  5. [Classes](#classes)
-     1. [S: Single Responsibility Principle (SRP)](#single-responsibility-principle-srp)
-     2. [O: Open/Closed Principle (OCP)](#openclosed-principle-ocp)
-     3. [L: Liskov Substitution Principle (LSP)](#liskov-substitution-principle-lsp)
-     4. [I: Interface Segregation Principle (ISP)](#interface-segregation-principle-isp)
-     5. [D: Dependency Inversion Principle (DIP)](#dependency-inversion-principle-dip)
-  6. [Don"t repeat yourself (DRY)](#dont-repeat-yourself-dry)
+# Table of Contents
+
+- [clean-code-python](#clean-code-python)
+- [Table of Contents](#table-of-contents)
+    - [Introduction](#introduction)
+        - [Why do we need clean code?](#why-do-we-need-clean-code)
+    - [**Variables**](#variables)
+        - [Use meaningful and pronounceable variable names](#use-meaningful-and-pronounceable-variable-names)
+        - [Use the same vocabulary for the same type of variable](#use-the-same-vocabulary-for-the-same-type-of-variable)
+        - [Use searchable names](#use-searchable-names)
+        - [Avoid encodings](#avoid-encodings)
+        - [Use explanatory variables](#use-explanatory-variables)
+        - [Avoid Mental Mapping](#avoid-mental-mapping)
+        - [Don"t add unneeded context](#dont-add-unneeded-context)
+        - [Pick one word per concept](#pick-one-word-per-concept)
+        - [Use default arguments instead of short circuiting or conditionals](#use-default-arguments-instead-of-short-circuiting-or-conditionals)
+    - [**Functions**](#functions)
+        - [Functions should do one thing](#functions-should-do-one-thing)
+        - [Functions should be small](#functions-should-be-small)
+        - [One level of abstraction per function](#one-level-of-abstraction-per-function)
+        - [Reading code from top to bottom](#reading-code-from-top-to-bottom)
+        - [Function arguments (2 or fewer ideally)](#function-arguments-2-or-fewer-ideally)
+        - [Function names should say what they do](#function-names-should-say-what-they-do)
+        - [Functions should only be one level of abstraction](#functions-should-only-be-one-level-of-abstraction)
+        - [Don"t use flags as function parameters](#dont-use-flags-as-function-parameters)
+        - [Avoid side effects](#avoid-side-effects)
+        - [Avoiding side effects part 2](#avoiding-side-effects-part-2)
+    - [**Objects and Data Structures**](#objects-and-data-structures)
+    - [**Classes**](#classes)
+        - [**Single Responsibility Principle (SRP)**](#single-responsibility-principle-srp)
+        - [**Open/Closed Principle (OCP)**](#openclosed-principle-ocp)
+        - [**Liskov Substitution Principle (LSP)**](#liskov-substitution-principle-lsp)
+        - [**Interface Segregation Principle (ISP)**](#interface-segregation-principle-isp)
+        - [**Dependency Inversion Principle (DIP)**](#dependency-inversion-principle-dip)
+    - [**Don"t repeat yourself (DRY)**](#dont-repeat-yourself-dry)
+    - [Miscallenous advice](#miscallenous-advice)
+        - [Switch statements](#switch-statements)
 
 ## Introduction
 
@@ -343,6 +368,214 @@ def create_micro_brewery(name: Text = "Hipster Brew Co."):
 
 **[⬆ back to top](#table-of-contents)**
 ## **Functions**
+
+
+### Functions should do one thing
+This is by far the most important rule in software engineering. When functions do more 
+than one thing, they are harder to compose, test, and reason about. When you can isolate 
+a function to just one action, they can be refactored easily and your code will read much 
+cleaner. If you take nothing else away from this guide other than this, you"ll be ahead 
+of many developers.
+
+**Bad:**
+```python
+from typing import List
+
+
+class Client:
+    active: bool
+
+
+def email(client: Client) -> None:
+    pass
+
+
+def email_clients(clients: List[Client]) -> None:
+    """Filter active clients and send them an email.
+    """
+    for client in clients:
+        if client.active:
+            email(client)
+```
+
+**Good**:
+```python
+from typing import List
+
+
+class Client:
+    active: bool
+
+
+def email(client: Client) -> None:
+    pass
+
+
+def get_active_clients(clients: List[Client]) -> List[Client]:
+    """Filter active clients.
+    """
+    return [client for client in clients if client.active]
+
+
+def email_clients(clients: List[Client]) -> None:
+    """Send an email to a given list of clients.
+    """
+    for client in get_active_clients(clients):
+        email(client)
+```
+
+Do you see an opportunity for using generators now?
+
+**Even better**
+```python
+from typing import Generator, Iterator
+
+
+class Client:
+    active: bool
+
+
+def email(client: Client):
+    pass
+
+
+def active_clients(clients: Iterator[Client]) -> Generator[Client, None, None]:
+    """Only active clients"""
+    return (client for client in clients if client.active)
+
+
+def email_client(clients: Iterator[Client]) -> None:
+    """Send an email to a given list of clients.
+    """
+    for client in active_clients(clients):
+        email(client)
+```
+
+### Functions should be small
+This rule is a natural evolution of the first rule. Your functions should be small. 
+The second rule is that they should be smaller than that.  How small should your functions be?
+A good way to know if your function is small enough and is doing one thing is to check if another
+function could be extracted from it without merely restating its implementation. For example:
+
+**Listing 1 - Bad:**
+
+```python
+class MonthlyDonationsReport:
+    # omitted for brevity...
+    def aggregate(self, organization_id, n_years=DEFAULT_N_YEARS):
+        current_year = datetime.now().year
+
+        result = self.collection.aggregate(
+            organization_id,
+            [
+                {
+                    "$match": {
+                        f"{self.time_field}": {
+                            "$gte": datetime(current_year + 1 - n_years, 1, 1)
+                        }
+                    }
+                },
+                {
+                    "$group": {
+                        "_id": {
+                            "year": {"$year": f"${self.time_field}"},
+                            "month": {"$month": f"${self.time_field}"},
+                        },
+                        "sum": {"$sum": f"${self.accumulator_field}"},
+                        "count": {"$sum": 1},
+                    }
+                },
+                {"$sort": {"_id.year": 1, "_id.month": 1}},
+            ],
+        )
+
+        self._data = query_to_df(result)
+        self._data.rename(
+            columns={"_id.month": "month", "_id.year": "year"}, inplace=True
+        )
+        self._data = self._fill_missing_months(self._data, n_years)
+        return self.data
+
+```
+
+**Listing 2 - Better:**
+```python
+    def aggregate(self, organization_id, n_years=DEFAULT_N_YEARS):
+        current_year = datetime.now().year
+        self._data = self._group_monthly_donations(organization_id, n_years)
+        self._data = self._fill_missing_months(self._data, n_years)
+        return self.data
+    
+```
+
+### One level of abstraction per function
+To make sure our function is doing one thing, we need to make sure that the statements
+within our function are all at the same level of abstraction. 
+
+Notice above in Listing 1 that the function has 3 levels of abstraction.
+
+- The first aggregation operates on the raw mongo collection (low level of abstraction)
+- Next we operate on the dataframe returned by the query (medium level of abstraction)
+- Lastly the `_fill_missing_months` method is a high level of abstraction
+
+In listing 2 above. All expressions at an even level of abstraction.
+
+Mixing levels of abstraction is confusing for the reader. Readers may not be able to tell what's an
+essential concept, or a detail. Even worse, once details are mixed with essential concepts, more and more
+details typically get added to the function causing it to grow.
+
+### Reading code from top to bottom
+We want code to read like a top down narrative. We want every function to be followed by those
+at the next level of abstraction. In other words, we want to be able to read code as though it were
+a set of `To` paragraphs. For example:
+
+    To compute the donor scores we create a pipeline which consists of 4 steps, fetching, preprocessing, processing and post processing.
+        
+        To fetch the data we must fetch contact data and donations data.
+        
+            To fetch the donations data we must query the database for all donations within the last year for the input organization
+            
+            To fetch all the contacts we must query the database for all contacts for the input organization
+
+This provides the reader with a nice entry point into the program.
+
+**Good example provided below (nice work @Surohit):**
+
+```python
+class DonationsEmailsInboundsWeatherFetcher:
+    # Init is like the intro paragraph. It sets us up for what to expect
+    def __init__(self, region=None, organization_id=None):
+        self.region = region
+        self.organization_id = organization_id
+    
+    # The fetch method is the main body. The reader can clearly see the core ideas being expressed
+    # If we go further down the file we see the level of abstraction increase.
+    # These are the lower level details that the reader can look into after understanding the main ideas
+    def fetch(self, region, organization_id):  
+        self.region = region
+        self.organization_id = organization_id
+
+        org_city, org_country = self.fetch_org_cities()
+        ripeness_donations = self.fetch_donations(org_city, org_country)
+        ripeness_emails = self.fetch_emails(ripeness_donations)
+        inbounds = self.fetch_inbounds(ripeness_donations, ripeness_emails)
+        weather_data = self.fetch_org_weather(ripeness_donations)
+
+        return RipenessDonationsData(
+            organization_id=organization_id,
+            region=region,
+            donations=ripeness_donations.df_donations,
+            emails=ripeness_emails.df_emails,
+            inbound_emails=inbounds,
+            sunshine=weather_data.sunshine,
+            temperature=weather_data.temperature,
+            start_date=ripeness_donations.min_date,
+            end_date=ripeness_donations.max_date,
+            contacts_list=ripeness_donations.contacts,
+        )
+
+```
+
 ### Function arguments (2 or fewer ideally)
 Limiting the amount of function parameters is incredibly important because it makes 
 testing your function easier. Having more than three leads to a combinatorial explosion 
@@ -518,88 +751,6 @@ create_menu(
 )
 ```
 **[⬆ back to top](#table-of-contents)**
-
-### Functions should do one thing
-This is by far the most important rule in software engineering. When functions do more 
-than one thing, they are harder to compose, test, and reason about. When you can isolate 
-a function to just one action, they can be refactored easily and your code will read much 
-cleaner. If you take nothing else away from this guide other than this, you"ll be ahead 
-of many developers.
-
-**Bad:**
-```python
-from typing import List
-
-
-class Client:
-    active: bool
-
-
-def email(client: Client) -> None:
-    pass
-
-
-def email_clients(clients: List[Client]) -> None:
-    """Filter active clients and send them an email.
-    """
-    for client in clients:
-        if client.active:
-            email(client)
-```
-
-**Good**:
-```python
-from typing import List
-
-
-class Client:
-    active: bool
-
-
-def email(client: Client) -> None:
-    pass
-
-
-def get_active_clients(clients: List[Client]) -> List[Client]:
-    """Filter active clients.
-    """
-    return [client for client in clients if client.active]
-
-
-def email_clients(clients: List[Client]) -> None:
-    """Send an email to a given list of clients.
-    """
-    for client in get_active_clients(clients):
-        email(client)
-```
-
-Do you see an opportunity for using generators now?
-
-**Even better**
-```python
-from typing import Generator, Iterator
-
-
-class Client:
-    active: bool
-
-
-def email(client: Client):
-    pass
-
-
-def active_clients(clients: Iterator[Client]) -> Generator[Client, None, None]:
-    """Only active clients"""
-    return (client for client in clients if client.active)
-
-
-def email_client(clients: Iterator[Client]) -> None:
-    """Send an email to a given list of clients.
-    """
-    for client in active_clients(clients):
-        email(client)
-```
-
 
 **[⬆ back to top](#table-of-contents)**
 
@@ -896,3 +1047,13 @@ def add_item_to_cart(cart, item):
 
 **[⬆ back to top](#table-of-contents)**
 
+## Miscallenous advice
+
+### Switch statements
+
+**Problem:**
+- They often do more than one thing
+- They are often repeated in multiple places
+
+**Solution**
+- Bury them in an abstract base class or function 
