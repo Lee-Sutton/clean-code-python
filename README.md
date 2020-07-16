@@ -971,7 +971,7 @@ So lets go over all our current concerns:
 
 **Better Design**:
 
-Imaging we got to go back in time and right our wrongs. What might we have done differently?
+Imagine we got to go back in time and right our wrongs. What might we have done differently?
 
 1. Instead of having our `Turtle` inherit from a `Hare` we create a *abstract* mixin that they BOTH inherit from.
 
@@ -1035,5 +1035,4 @@ From here we could go on and on adding in new classes. For instance, what might 
 1. Avoid inheriting from concrete classes at all costs
 2. Use Abstractions(Mixins) in place
 3. Only create abstractions when there is an existing use case (avoid confusing readers)
-
 
