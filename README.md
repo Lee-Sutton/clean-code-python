@@ -966,7 +966,7 @@ Okay, that was somewhat easy. We have multiple inheritance that seems to cover a
 
 So lets go over all our current concerns:
 1. This is clearly confusing to any reader. 
-2. Inherting from concrete classes beging to introduce dependancy webs.
+2. Inherting from concrete classes begins to introduce dependency webs.
 3. Debuging can become a nightmare!
 
 **Better Design**:
@@ -1035,7 +1035,6 @@ From here we could go on and on adding in new classes. For instance, what might 
 1. Avoid inheriting from concrete classes at all costs
 2. Use Abstractions(Mixins) in place
 3. Only create abstractions when there is an existing use case (avoid confusing readers)
-
 
 
 
