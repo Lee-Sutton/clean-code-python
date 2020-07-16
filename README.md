@@ -996,7 +996,7 @@ class Turtle(AnimalMixin):
     def crawl(self):
         pass
 ```
-2. Instead of having our Duck inherite from any one class, we can inherit from the AnimalMixin and also create other sets of mixins for the common methods shared across classes. This will allow us to easily identify any potential issues when methods are called and also consolidate code.
+2. Instead of having our Canadian Goose inherite from any one class, we can inherit from the AnimalMixin and also create other sets of mixins for the common methods shared across classes. This will allow us to easily identify any potential issues when methods are called and also consolidate code.
 ```python
 class AnimalMixin:
     def sleep(self):
