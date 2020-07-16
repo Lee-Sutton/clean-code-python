@@ -955,14 +955,14 @@ class Turtle(Hare):
 ```
 Well, okay. That might have fixed it. But does this really make sense? Or is there a *base abstraction* we can pull out here? We will come back to this later. 
 
-We just got an update from marketting that the latest research indicates that gamers really want to play as a Canadian Goose! Well, Canadian Goose swim, run, fly, sleep AND most importantly, poop. So we do the following:
+We just got an update from marketing that the latest research indicates that gamers really want to play as a Canadian Goose! Well, Canadian Goose swim, run, fly, sleep AND most importantly, poop. So we do the following:
 
 ```python 
-class Duck(Hare, Eagle, Turtle):
+class CanadianGoose(Hare, Eagle, Turtle):
     def poop(self):
         pass
 ```
-Okay, that was somewhat easy. We have multple inheritance that seems to cover all of our basses. But lets think about this a little bit. What happens when we ask our duck to run? Which class method gets chosen? The same issue goes for when we ask the duck to sleep or eat, what would happen? Imagine having to debug this in production! We call this issue the [**Diamond Problem**](https://en.wikipedia.org/wiki/Multiple_inheritance#The_diamond_problem).
+Okay, that was somewhat easy. We have multiple inheritance that seems to cover all of our basses. But lets think about this a little bit. What happens when we ask our Canadian Goose to run? Which class method gets chosen? The same issue goes for when we ask the Canadian Goose to sleep or eat, what would happen? Imagine having to debug this in production! We call this issue the [**Diamond Problem**](https://en.wikipedia.org/wiki/Multiple_inheritance#The_diamond_problem).
 
 So lets go over all our current concerns:
 1. This is clearly confusing to any reader. 
@@ -973,7 +973,7 @@ So lets go over all our current concerns:
 
 Imaging we got to go back in time and right our wrongs. What might we have done differently?
 
-1. Instead of having our `Tortoise` inherit from a `Hare` we create a *abstract* mixin that they BOTH inherit from.
+1. Instead of having our `Turtle` inherit from a `Hare` we create a *abstract* mixin that they BOTH inherit from.
 
 ```python
 class AnimalMixin:
@@ -1025,7 +1025,7 @@ class Turtle(AnimalMixin, SwimMixin):
     def crawl(self):
         pass
 
-class Duck(AnimialMixin, BirdMixin, SwimMixin):
+class CanadianGoose(AnimialMixin, BirdMixin, SwimMixin):
         pass
 
 ```
