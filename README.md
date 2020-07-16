@@ -917,7 +917,7 @@ require mixins:
 1. You want to add in a lot of features and/or methods for a class
 2. You want to use a particular feature and/or across many different classes
 
-Sometimes we might refer to mixins as being `included` as opposed to `inherited`. Mixins help us abide by the [dependancy inversion principle](#dependency-inversion-principle-dip). Lets walk through the following example where we image we're game makers creating an open world safari adventure game! Let's define some animals:
+Sometimes we might refer to mixins as being `included` as opposed to `inherited`. Mixins help us abide by the [dependency inversion principle](#dependency-inversion-principle-dip). Lets walk through the following example where we image we're game makers creating an open world safari adventure game! Let's define some animals:
 
 **Bad Design:**
 ```python
@@ -966,12 +966,12 @@ Okay, that was somewhat easy. We have multiple inheritance that seems to cover a
 
 So lets go over all our current concerns:
 1. This is clearly confusing to any reader. 
-2. Inherting from concrete classes beging to introduce dependancy webs.
-3. Debuging can become a nightmare!
+2. Inherting from concrete classes begins to introduce dependency webs.
+3. Debugging can become a nightmare!
 
 **Better Design**:
 
-Imaging we got to go back in time and right our wrongs. What might we have done differently?
+Imagine we got to go back in time and right our wrongs. What might we have done differently?
 
 1. Instead of having our `Turtle` inherit from a `Hare` we create a *abstract* mixin that they BOTH inherit from.
 
@@ -996,7 +996,11 @@ class Turtle(AnimalMixin):
     def crawl(self):
         pass
 ```
+<<<<<<< HEAD
 2. Instead of having our Canadian Goose inherite from any one class, we can inherit from the AnimalMixin and also create other sets of mixins for the common methods shared across classes. This will allow us to easily identify any potential issues when methods are called and also consolidate code.
+=======
+2. Instead of having our Duck inherit from any one class, we can inherit from the AnimalMixin and also create other sets of mixins for the common methods shared across classes. This will allow us to easily identify any potential issues when methods are called and also consolidate code.
+>>>>>>> 5d19d30ad5b65bdd85f70ea7abd3204cd8cbe085
 ```python
 class AnimalMixin:
     def sleep(self):
@@ -1035,7 +1039,3 @@ From here we could go on and on adding in new classes. For instance, what might 
 1. Avoid inheriting from concrete classes at all costs
 2. Use Abstractions(Mixins) in place
 3. Only create abstractions when there is an existing use case (avoid confusing readers)
-
-
-
-
